@@ -13,7 +13,7 @@ resource "aws_vpc" "taxi_vpc" {
   cidr_block = local.vpc_cidr
 
   tags = {
-    Name = "taxi_app"
+    Name = var.env_code
   }
 }
 #----------Public----------------
@@ -26,12 +26,16 @@ resource "aws_subnet" "public" {
   availability_zone = local.availability_zone[count.index]
 
   tags = {
-    Name = "public${count.index+1}"
+    Name = "${var.env_code}-public${count.index+1}"
   }
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.taxi_vpc.id
+
+  tags = {
+    Name = "${var.env_code}-IGW"
+  }
 }
 
 resource "aws_route_table" "public_routing" {
@@ -41,12 +45,16 @@ resource "aws_route_table" "public_routing" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.main.id
   }
+  tags = {
+    Name = "${var.env_code}-Public-Route_Table"
+  }
 }
 
 resource "aws_route_table_association" "public" {
   count = 2
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public_routing.id
+
 }
 
 
@@ -58,7 +66,7 @@ resource "aws_subnet" "private" {
   availability_zone = local.availability_zone[count.index]
 
   tags = {
-    Name = "private${count.index+1}"
+    Name = "${var.env_code}-private${count.index+1}"
   }
 }
 
@@ -72,7 +80,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "private${count.index+1}_routing_table"
+    Name = "${var.env_code}-private${count.index+1}_routing_table"
   }
 }
 
@@ -90,7 +98,7 @@ resource "aws_nat_gateway" "nat" {
   subnet_id     = aws_subnet.public[count.index].id
 
   tags = {
-    Name = "NAT${count.index+1}"
+    Name = "${var.env_code}-NAT-GW${count.index+1}"
   }
 }
 
@@ -98,4 +106,8 @@ resource "aws_nat_gateway" "nat" {
 resource "aws_eip" "nat" {
   count = 2
   vpc      = true
+
+  tags = {
+    Name = "${var.env_code}-NAT_EIP${count.index+1}"
+  }
 }
