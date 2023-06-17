@@ -1,16 +1,7 @@
 #https://www.youtube.com/watch?v=HiTJyeFpJ40&list=PL21dI-erNM7c954KHtaiqj0oftWf1eZOg&index=3
-locals {
-  vpc_cidr          = "10.0.0.0/16"
-
-  public_cidr       = ["10.0.0.0/24", "10.0.1.0/24"]
-
-  private_cidr      = ["10.0.2.0/24", "10.0.3.0/24"]
-
-  availability_zone = ["us-east-2a", "us-east-2b"]
-}
 
 resource "aws_vpc" "taxi_vpc" {
-  cidr_block = local.vpc_cidr
+  cidr_block = var.vpc_cidr
 
   tags = {
     Name = var.env_code
@@ -21,9 +12,9 @@ resource "aws_subnet" "public" {
   count = 2
 
   vpc_id     = aws_vpc.taxi_vpc.id
-  cidr_block = local.public_cidr[count.index]
+  cidr_block = var.public_cidr[count.index]
 
-  availability_zone = local.availability_zone[count.index]
+  availability_zone = var.availability_zone[count.index]
 
   tags = {
     Name = "${var.env_code}-public${count.index+1}"
@@ -62,8 +53,8 @@ resource "aws_route_table_association" "public" {
 resource "aws_subnet" "private" {
   count = 2
   vpc_id     = aws_vpc.taxi_vpc.id
-  cidr_block = local.private_cidr[count.index]
-  availability_zone = local.availability_zone[count.index]
+  cidr_block = var.private_cidr[count.index]
+  availability_zone = var.availability_zone[count.index]
 
   tags = {
     Name = "${var.env_code}-private${count.index+1}"
